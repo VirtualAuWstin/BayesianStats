@@ -1,0 +1,125 @@
+---
+title: "Quiz 13"
+name: Austin Wang
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(rstanarm)
+library(brms)
+library(bayesplot)
+library(bayestestR)
+library(parameters)
+library(magrittr)
+library(stableGR)
+library(skimr)
+
+
+options(mc.cores = parallel::detectCores())
+```
+
+## Intro
+
+This quiz is open everything, including notes, textbook, and whatever you might find on the internet. However, no interaction with other people is allowed. You have until 11:59 pm EST on December 10 to finish the quiz; there is no other time restriction. However, your file must be submitted on Canvas by the deadline; allow yourself time to download the file from RStudio Cloud to your computer and to submit it via Canvas.
+
+
+## Read the data for the quiz and take a look
+
+* First, read the data. This is an artificial dataset.
+
+```{r get data}
+quiz13 <- read_csv("quiz13.csv")
+```
+
+* Next, look at the outcome, y, by each variable.
+
+```{r first plots}
+quiz13 %>%
+  ggplot(aes(x1, y)) +
+  geom_point(aes(colour = group)) +
+  geom_smooth()
+
+quiz13 %>%
+  ggplot(aes(x2, y)) +
+  geom_point(aes(colour = group)) +
+  geom_smooth()
+```
+
+* Notice that y is a count variable. There is no reason to think that it is overdispersed.
+
+## Fit and check the model
+
+* Please fit a model with y predicted by x1 and x2 (no interaction) and group specific intercepts (but not slopes). Don't specify values of priors, iter, or cores, meaning that you will use the default values. However, do include the argument adapt_delta = 0.99
+
+```{r fit model}
+set.seed(1766)
+fit1 <- stan_glmer(y ~ x1 + x2 + (1 | group), data= quiz13, family = poisson, adapt_delta = 0.99)
+```
+
+* Please create the trace plots (the last plot, labeled "Sigma[group:(Intercept),(Intercept)]), may look odd---don't worry about it).
+
+```{r traces}
+plot(fit1, plotfun = "trace")
+```
+
+* Please create the posterior predictive check plot. You should find that it looks fine.
+^ I thought you being sarcastic at first. Then I realized I forgot to add family = poisson.
+
+```{r posterior predictive check plot}
+pp_check(fit1)
+```
+
+## Examining the posterior.
+
+* Please plot the densities of the posterior distribution for **just** the regression coefficients for x1 and for x2. Hint: the argument pars = c("x1", "x2") will restrict to just those two coefficients.
+
+```{r densities}
+plot(fit1, plotfun = "areas", prob = 0.9, point_est = "mean", pars = c("x1", "x2"))
+# S OR...
+plot(fit1, plotfun = "dens", pars = c("x1", "x2"))
+```
+
+* For the regression coefficient of x1, please use the following code chunk to find both the mean of the posterior and a 90% credible interval. Use whatever function or functions you like, but be sure to fill the sentences after the code chunk.
+
+```{r x1 posterior summary}
+describe_posterior(fit1, centrality = "Mean", ci=0.9)
+```
+
+* The mean of the posterior for the regression coefficient for x1 is 0.125
+* A 90% credible interval the regression coefficient for x1 is [0.118, 0.132]
+
+## Prediction
+
+* We will predict values at a single new data point, namely x1 = 1, x2 = 2, and group = C. The code below creates a new data frame with just that single new observation.
+
+```{r create prediction data frame}
+data_for_prediction <-
+  tibble(x1 = 1, x2 = 2, group = "C")
+```
+
+* Use the code chunk below to find the mean of the posterior predictive distribution for the new observation.
+
+```{r mean of posterior predictive distribution}
+fit1 %>%
+  posterior_predict(newdata = data_for_prediction) %>%
+  colMeans()
+```
+
+* Please find the 90% predictive interval for the new observation
+
+```{r predictive interval}
+fit1 %>%
+  predictive_interval(newdata = data_for_prediction)
+```
+
+
+* Before you submit your file, be sure to choose "Run All" from the menu at the top right of the panel to make sure your entire file runs without errors. 
+* Also, search for YOUR to make sure you haven't missed anything.
+* Finally, type your name below the pledge below to electronically sign it.
+
+On my honor, I have neither received nor given any unauthorized assistance on this quiz.
+Austin Wang

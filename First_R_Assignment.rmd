@@ -7,7 +7,7 @@ output: html_document
 We'll take an in-depth look at a Bayesian data analysis of per-country vital statistics.
 
 ### Set up.
-First load some required packages. You can run the entire chunk by clicking on the green arrow below.
+First load some required packages. Run the entire chunk by clicking on the green arrow below.
 
 ```{r setup, echo=FALSE,message=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = TRUE)
